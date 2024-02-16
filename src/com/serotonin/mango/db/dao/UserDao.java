@@ -27,6 +27,7 @@ import java.util.List;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import com.serotonin.db.spring.GenericRowMapper;
 import com.serotonin.mango.Common;
@@ -36,8 +37,12 @@ import com.serotonin.mango.vo.User;
 import com.serotonin.mango.vo.UserComment;
 import com.serotonin.mango.vo.permission.DataPointAccess;
 import com.serotonin.web.taglib.Functions;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class UserDao extends BaseDao {
+    private final Log log = LogFactory.getLog(UserDao.class);
+
     private static final String USER_SELECT = "select id, username, password, email, phone, admin, disabled, selectedWatchList, homeUrl, lastLogin, "
             + "  receiveAlarmEmails, receiveOwnAuditEvents " + "from users ";
 
@@ -141,17 +146,28 @@ public class UserDao extends BaseDao {
     }
 
     private static final String USER_UPDATE = "update users set "
-            + "  username=?, password=?, email=?, phone=?, admin=?, disabled=?, homeUrl=?, receiveAlarmEmails=?, "
-            + "  receiveOwnAuditEvents=? " + "where id=?";
+            + "  username=?, password=?, email=?, phone=?, admin=?, disabled=?, homeUrl=?, receiveAlarmEmails=?, receiveOwnAuditEvents=? " + "where id=?";
 
-    void updateUser(User user) {
-        ejt.update(
-                USER_UPDATE,
-                new Object[] { user.getUsername(), user.getPassword(), user.getEmail(), user.getPhone(),
-                        boolToChar(user.isAdmin()), boolToChar(user.isDisabled()), user.getHomeUrl(),
-                        user.getReceiveAlarmEmails(), boolToChar(user.isReceiveOwnAuditEvents()), user.getId() });
-        saveRelationalData(user);
-    }
+    void updateUser(User user) throws IllegalArgumentException {
+            try {
+                ejt.update(USER_UPDATE, new Object[]{
+                        user.getUsername(),
+                        user.getPassword(),
+                        user.getEmail(),
+                        user.getPhone(), // can be null
+                        boolToChar(user.isAdmin()),
+                        boolToChar(user.isDisabled()),
+                        user.getHomeUrl(), // can be null
+                        user.getReceiveAlarmEmails(),
+                        boolToChar(user.isReceiveOwnAuditEvents()),
+                        user.getId()
+                });
+            } catch (DataIntegrityViolationException e) {
+                // Handle or log the SQL exception as needed
+                log.warn("", e);
+                throw new RuntimeException(e);
+            }
+        }
 
     private void saveRelationalData(final User user) {
         // Delete existing permissions.
@@ -221,5 +237,7 @@ public class UserDao extends BaseDao {
         comment.setComment(Functions.truncate(comment.getComment(), 1024));
         ejt.update(USER_COMMENT_INSERT, new Object[] { comment.getUserId(), typeId, referenceId, comment.getTs(),
                 comment.getComment() });
+
+
     }
 }
