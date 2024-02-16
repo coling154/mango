@@ -27,6 +27,7 @@ import java.util.List;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import com.serotonin.db.spring.GenericRowMapper;
 import com.serotonin.mango.Common;
@@ -36,8 +37,12 @@ import com.serotonin.mango.vo.User;
 import com.serotonin.mango.vo.UserComment;
 import com.serotonin.mango.vo.permission.DataPointAccess;
 import com.serotonin.web.taglib.Functions;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class UserDao extends BaseDao {
+    private final Log log = LogFactory.getLog(UserDao.class);
+
     private static final String USER_SELECT = "select id, username, password, email, phone, admin, disabled, selectedWatchList, homeUrl, lastLogin, "
             + "  receiveAlarmEmails, receiveOwnAuditEvents " + "from users ";
 
@@ -144,23 +149,25 @@ public class UserDao extends BaseDao {
             + "  username=?, password=?, email=?, phone=?, admin=?, disabled=?, homeUrl=?, receiveAlarmEmails=?, receiveOwnAuditEvents=? " + "where id=?";
 
     void updateUser(User user) throws IllegalArgumentException {
-        if (user.getUsername() == null || user.getPassword() == null || user.getEmail() == null) {
-            throw new IllegalArgumentException("Username, password, and email cannot be null.");
+            try {
+                ejt.update(USER_UPDATE, new Object[]{
+                        user.getUsername(),
+                        user.getPassword(),
+                        user.getEmail(),
+                        user.getPhone(), // can be null
+                        boolToChar(user.isAdmin()),
+                        boolToChar(user.isDisabled()),
+                        user.getHomeUrl(), // can be null
+                        user.getReceiveAlarmEmails(),
+                        boolToChar(user.isReceiveOwnAuditEvents()),
+                        user.getId()
+                });
+            } catch (DataIntegrityViolationException e) {
+                // Handle or log the SQL exception as needed
+                log.warn("", e);
+                throw new RuntimeException(e);
+            }
         }
-        ejt.update(USER_UPDATE, new Object[]{
-                user.getUsername(), // varchar(40) not null
-                user.getPassword(), //varchar(30) not null
-                user.getEmail(),  // varchar(40) not null
-                user.getPhone(),  // varchar(40)
-                boolToChar(user.isAdmin()), // char(1) not null
-                boolToChar(user.isDisabled()),  // char(1) not null
-                user.getHomeUrl(), // varchar(255)
-                user.getReceiveAlarmEmails(), // int not null
-                boolToChar(user.isReceiveOwnAuditEvents()), // char(1) not null
-                user.getId() // PrimaryKey int not null
-        });
-        saveRelationalData(user);
-    }
 
     private void saveRelationalData(final User user) {
         // Delete existing permissions.
