@@ -141,15 +141,24 @@ public class UserDao extends BaseDao {
     }
 
     private static final String USER_UPDATE = "update users set "
-            + "  username=?, password=?, email=?, phone=?, admin=?, disabled=?, homeUrl=?, receiveAlarmEmails=?, "
-            + "  receiveOwnAuditEvents=? " + "where id=?";
+            + "  username=?, password=?, email=?, phone=?, admin=?, disabled=?, homeUrl=?, receiveAlarmEmails=?, receiveOwnAuditEvents=? " + "where id=?";
 
-    void updateUser(User user) {
-        ejt.update(
-                USER_UPDATE,
-                new Object[] { user.getUsername(), user.getPassword(), user.getEmail(), user.getPhone(),
-                        boolToChar(user.isAdmin()), boolToChar(user.isDisabled()), user.getHomeUrl(),
-                        user.getReceiveAlarmEmails(), boolToChar(user.isReceiveOwnAuditEvents()), user.getId() });
+    void updateUser(User user) throws IllegalArgumentException {
+        if (user.getUsername() == null || user.getPassword() == null || user.getEmail() == null) {
+            throw new IllegalArgumentException("Username, password, and email cannot be null.");
+        }
+        ejt.update(USER_UPDATE, new Object[]{
+                user.getUsername(), // varchar(40) not null
+                user.getPassword(), //varchar(30) not null
+                user.getEmail(),  // varchar(40) not null
+                user.getPhone(),  // varchar(40)
+                boolToChar(user.isAdmin()), // char(1) not null
+                boolToChar(user.isDisabled()),  // char(1) not null
+                user.getHomeUrl(), // varchar(255)
+                user.getReceiveAlarmEmails(), // int not null
+                boolToChar(user.isReceiveOwnAuditEvents()), // char(1) not null
+                user.getId() // PrimaryKey int not null
+        });
         saveRelationalData(user);
     }
 
@@ -221,5 +230,7 @@ public class UserDao extends BaseDao {
         comment.setComment(Functions.truncate(comment.getComment(), 1024));
         ejt.update(USER_COMMENT_INSERT, new Object[] { comment.getUserId(), typeId, referenceId, comment.getTs(),
                 comment.getComment() });
+
+
     }
 }
