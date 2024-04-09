@@ -148,26 +148,34 @@ public class UserDao extends BaseDao {
     private static final String USER_UPDATE = "update users set "
             + "  username=?, password=?, email=?, phone=?, admin=?, disabled=?, homeUrl=?, receiveAlarmEmails=?, receiveOwnAuditEvents=? " + "where id=?";
 
-    void updateUser(User user) throws IllegalArgumentException {
+    void updateUser(User user){
+        String phone, homeUrl;
+        if(user.getPhone() != null){phone = user.getPhone();}
+        else{phone = "";}
+        if(user.getHomeUrl() != null){homeUrl = user.getHomeUrl();}
+        else{homeUrl = "";}
+           Object[] usr = {
+                   user.getUsername(),
+                   user.getPassword(),
+                   user.getEmail(),
+                    // can be null
+                   phone,
+                   boolToChar(user.isAdmin()),
+                   boolToChar(user.isDisabled()),
+                     // can be null
+                   homeUrl,
+                   user.getReceiveAlarmEmails(),
+                   boolToChar(user.isReceiveOwnAuditEvents()),
+                   user.getId()
+           };
             try {
-                ejt.update(USER_UPDATE, new Object[]{
-                        user.getUsername(),
-                        user.getPassword(),
-                        user.getEmail(),
-                        user.getPhone(), // can be null
-                        boolToChar(user.isAdmin()),
-                        boolToChar(user.isDisabled()),
-                        user.getHomeUrl(), // can be null
-                        user.getReceiveAlarmEmails(),
-                        boolToChar(user.isReceiveOwnAuditEvents()),
-                        user.getId()
-                });
-            } catch (DataIntegrityViolationException e) {
-                // Handle or log the SQL exception as needed
+                ejt.update(USER_UPDATE, usr);
+            }
+            catch (DataIntegrityViolationException e) {
                 log.warn("", e);
                 throw new RuntimeException(e);
             }
-        }
+    }
 
     private void saveRelationalData(final User user) {
         // Delete existing permissions.
