@@ -124,7 +124,7 @@
         writeReportPointsArray();
     }
 
-    function addToReportPointsArray(pointId, colour, consolidatedChart) {
+    function addToReportPointsArray(pointId, colour, consolidatedChart, scatterChart, plotTitle, xaxistitle, yaxistitle, referenceline) {
         var data = getPointData(pointId);
         if (data) {
             // Missing names imply that the point was deleted, so ignore.
@@ -133,7 +133,12 @@
                 pointName : data.name,
                 pointType : data.dataTypeMessage,
                 colour : !colour ? (!data.chartColour ? "" : data.chartColour) : colour,
-                consolidatedChart : consolidatedChart
+                consolidatedChart : consolidatedChart,
+                scatterChart : scatterChart,
+                plotTitle : plotTitle,
+                xaxistitle : xaxistitle,
+                yaxistitle : yaxistitle,
+                referenceline : referenceline
             };
         }
     }
@@ -167,27 +172,31 @@
                         return "<input type='checkbox'"+ (data.consolidatedChart ? " checked='checked'" : "") +
                                 " onclick='updatePointConsolidatedChart("+ data.pointId +", this.checked)'/>";
                     },
-                    function(data) {
-                            return "<img src='images/bullet_delete.png' class='ptr' "+
-                                    "onclick='removeFromReportPointsArray("+ data.pointId +")'/>";
-                    },
+
                   function(data) {
-                    return "<input type='radio' id= 'line' name= 'chartType"+data.pointId+"' value= 'line' onchange='updatePointChartType(" + data.pointId +", this.checked)'/><label for='line'>Line</label> <input type='radio' id= 'scatter' name= 'chartType" + data.pointId + "' value= 'scatter' onchange='updatePointChartType(" + data.pointId +", this.checked)'/><label for='scatter'>Scatter</label>";
+                    return "<input type='radio' id= 'line' name= 'chartType"+data.pointId+"' value= 'F' onchange='updatePointChartType(" + data.pointId +", this.checked)'/>" +
+                            "<label for='line'>Line</label> " +
+                            "<input type='radio' id= 'scatter' name= 'chartType" + data.pointId + "' value= 'T' onchange='updatePointChartType(" + data.pointId +", this.checked)'/" +
+                            "><label for='scatter'>Scatter</label>";
                   },
 
                   function(data) {
-                    return "<input type='text' value='"+ data.title +"' "+
+                    return "<input type='text' value='"+ data.plottitle +"' "+
                             "onblur='updatePointTitle("+ data.pointId +", this.value)'/>";
                   },
 
                   function(data) {
-                    return "<input type='text' value='"+ data.xAxisTitle +"' "+
+                    return "<input type='text' value='"+ data.xaxistitle +"' "+
                             "onblur='updateXAxisTitle("+ data.pointId +", this.value)'/>";
                   },
 
                   function(data) {
-                    return "<input type='text' value='"+ data.yAxisTitle +"' "+
+                    return "<input type='text' value='"+ data.yaxistitle +"' "+
                             "onblur='updateYAxisTitle("+ data.pointId +", this.value)'/>";
+                  },
+                  function(data) {
+                    return "<input type='text' value='"+ data.referenceline +"' "+
+                            "onblur='updateRefrenceLine("+ data.pointId +", this.value)'/>";
                   },
 
                   function(data) {
@@ -415,35 +424,41 @@
         display("emailDetails", email);
         display("emailRecipBody", email);
     }
-    function updatePointChartType(pointId, chartType) {
+    function updatePointChartType(pointId, charttype) {
       var item = getElement(reportPointsArray, pointId, "pointId");
       if(item)
-        item["chartType"] = chartType;
+        item["charttype"] = charttype;
     }
 
-    function updatePointTitle(pointId, title) {
+    function updatePointTitle(pointId, plottitle) {
       var item = getElement(reportPointsArray, pointId, "pointId");
       if (item)
-        item["title"] = title;
+        item["plottitle"] = plottitle;
     }
 
-    function updateXAxisTitle(pointId, xAxisTitle) {
+    function updateXAxisTitle(pointId, xaxistitle) {
       var item = getElement(reportPointsArray, pointId, "pointId");
       if (item)
-        item["xAxisTitle"] = xAxisTitle;
+        item["xaxistitle"] = xAxisTitle;
     }
 
-    function updateYAxisTitle(pointId, yAxisTitle) {
+    function updateYAxisTitle(pointId, yaxistitle) {
       var item = getElement(reportPointsArray, pointId, "pointId");
       if (item)
-        item["yAxisTitle"] = yAxisTitle;
+        item["yaxistitle"] = yaxistitle;
+    }
+    function updateRefrenceLine(pointId, refrenceline) {
+      var item = getElement(reportPointsArray, pointId, "pointId");
+      if (item)
+        item["birefringence"] = refrenceline;
     }
 
     function getReportPointIdsArray() {
         var points = new Array();
         for (var i=0; i<reportPointsArray.length; i++)
             points[points.length] = { pointId: reportPointsArray[i].pointId, colour: reportPointsArray[i].colour,
-        		    consolidatedChart: reportPointsArray[i].consolidatedChart };
+        		    consolidatedChart: reportPointsArray[i].consolidatedChart, scatterChart: reportPointsArray[i].scatterChart,
+                    plotTitle: reportPointsArray[i].plotTitle, xaxistitle: reportPointsArray[i].xaxistitle, yaxistitle: reportPointsArray[i].yaxistitle, referenceline: reportPointsArray[i].referenceline};
         return points;
     }
 

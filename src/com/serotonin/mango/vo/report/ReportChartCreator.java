@@ -283,6 +283,11 @@ public class ReportChartCreator {
         private Color numericTimeSeriesColor;
         private DiscreteTimeSeries discreteTimeSeries;
         private byte[] imageData;
+        private boolean scatterChart;
+        private String plotTitle;
+        private String xAxisTitle;
+        private String yAxisTitle;
+        private int referenceLine;
 
         public PointStatistics(int reportPointId) {
             this.reportPointId = reportPointId;
@@ -367,7 +372,45 @@ public class ReportChartCreator {
         public void setImageData(byte[] imageData) {
             this.imageData = imageData;
         }
+        public boolean isScatterChart() {
+            return scatterChart;
+        }
 
+        public void setScatterChart(boolean scatterChart) {
+            this.scatterChart = scatterChart;
+        }
+
+        public String getPlotTitle() {
+            return plotTitle;
+        }
+
+        public void setPlotTitle(String plotTitle) {
+            this.plotTitle = plotTitle;
+        }
+
+        public String getXAxisTitle() {
+            return xAxisTitle;
+        }
+
+        public void setXAxisTitle(String xAxisTitle) {
+            this.xAxisTitle = xAxisTitle;
+        }
+
+        public String getYAxisTitle() {
+            return yAxisTitle;
+        }
+
+        public void setYAxisTitle(String yAxisTitle) {
+            this.yAxisTitle = yAxisTitle;
+        }
+
+        public int getReferenceLine() {
+            return referenceLine;
+        }
+
+        public void setReferenceLine(int referenceLine) {
+            this.referenceLine = referenceLine;
+        }
         public String getAnalogMinimum() {
             return textRenderer.getText(((AnalogStatistics) stats).getMinimum(), TextRenderer.HINT_FULL);
         }
@@ -496,7 +539,17 @@ public class ReportChartCreator {
             point.setDataType(pointInfo.getDataType());
             point.setDataTypeDescription(DataTypes.getDataTypeMessage(pointInfo.getDataType()).getLocalizedMessage(
                     bundle));
-            point.setTextRenderer(pointInfo.getTextRenderer());
+            try {
+                point.setScatterChart(pointInfo.isScatterChart());
+                point.setPlotTitle(pointInfo.getPlotTitle());
+                point.setXAxisTitle(pointInfo.getXAxisTitle());
+                point.setYAxisTitle(pointInfo.getYAxisTitle());
+                point.setReferenceLine(pointInfo.getReferenceLine());
+                point.setTextRenderer(pointInfo.getTextRenderer());
+            }
+            catch(NullPointerException e) {
+                // do nothing ?
+            }
             if (pointInfo.getStartValue() != null)
                 point.setStartValue(pointInfo.getTextRenderer().getText(pointInfo.getStartValue(),
                         TextRenderer.HINT_FULL));

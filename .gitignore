@@ -4,3 +4,5 @@ derby.log
 /build
 /src_gen
 /.idea
+/.settings
+/.github
