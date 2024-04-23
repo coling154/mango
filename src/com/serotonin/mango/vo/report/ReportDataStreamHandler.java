@@ -17,7 +17,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.serotonin.mango.vo.report;
-
 /**
  * @author Matthew Lohbihler
  */
@@ -25,14 +24,14 @@ public interface ReportDataStreamHandler {
     /**
      * Called before the data for the given point is provided. A point may not have any data, so calls to setData are
      * not guaranteed.
-     * 
+     *
      * @param pointInfo
      */
     void startPoint(ReportPointInfo pointInfo);
 
     /**
      * Provides a single data value for the current point.
-     * 
+     *
      * @param rdv
      */
     void pointData(ReportDataValue rdv);

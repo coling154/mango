@@ -52,23 +52,24 @@ import com.serotonin.util.StringUtils;
  * @author Matthew Lohbihler
  */
 public class ImageChartUtils {
+
     private static final int NUMERIC_DATA_INDEX = 0;
     private static final int DISCRETE_DATA_INDEX = 1;
 
     public static void writeChart(PointTimeSeriesCollection pointTimeSeriesCollection, OutputStream out, int width,
-            int height) throws IOException {
-        writeChart(pointTimeSeriesCollection, pointTimeSeriesCollection.hasMultiplePoints(), out, width, height);
+                                  int height) throws IOException {
+        writeChart(pointTimeSeriesCollection, pointTimeSeriesCollection.hasMultiplePoints(), out, width*2, height*2);
     }
 
     public static byte[] getChartData(PointTimeSeriesCollection pointTimeSeriesCollection, int width, int height) {
-        return getChartData(pointTimeSeriesCollection, pointTimeSeriesCollection.hasMultiplePoints(), width, height);
+        return getChartData(pointTimeSeriesCollection, pointTimeSeriesCollection.hasMultiplePoints(), width*2, height*2);
     }
 
     public static byte[] getChartData(PointTimeSeriesCollection pointTimeSeriesCollection, boolean showLegend,
-            int width, int height) {
+                                      int width, int height) {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            writeChart(pointTimeSeriesCollection, showLegend, out, width, height);
+            writeChart(pointTimeSeriesCollection, showLegend, out, width*2, height*2);
             return out.toByteArray();
         }
         catch (IOException e) {
@@ -79,8 +80,14 @@ public class ImageChartUtils {
     public static void writeChart(PointTimeSeriesCollection pointTimeSeriesCollection, boolean showLegend,
             OutputStream out, int width, int height) throws IOException {
 
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(null, null, null, null, showLegend, false, false);
+        ReportVO vo = new ReportVO();
+
+        String titletest = "hello";
+
+        JFreeChart chart = ChartFactory.createTimeSeriesChart("TESTINGFORSTRING", "XLABEL", "YLABEL", null, showLegend, true, true);
         chart.setBackgroundPaint(SystemSettingsDao.getColour(SystemSettingsDao.CHART_BACKGROUND_COLOUR));
+
+        chart.setTitle("testing");
 
         XYPlot plot = chart.getXYPlot();
         plot.setBackgroundPaint(SystemSettingsDao.getColour(SystemSettingsDao.PLOT_BACKGROUND_COLOUR));
@@ -171,25 +178,25 @@ public class ImageChartUtils {
         }
 
         // Return the image.
-        ChartUtilities.writeChartAsPNG(out, chart, width, height);
+        ChartUtilities.writeChartAsPNG(out, chart, 800, 800);
     }
 
     // public static void writeChart(TimeSeries timeSeries, OutputStream out, int width, int height) throws IOException
     // {
     // writeChart(new TimeSeriesCollection(timeSeries), false, out, width, height);
     // }
-    //    
+    //
     // public static void writeChart(TimeSeriesCollection timeSeriesCollection, boolean showLegend, OutputStream out,
     // int width, int height) throws IOException {
     // JFreeChart chart = ChartFactory.createTimeSeriesChart(null, null, null, timeSeriesCollection, showLegend,
     // false, false);
     // chart.setBackgroundPaint(Color.white);
-    //        
+    //
     // // Change the plot renderer
     // // XYPlot plot = chart.getXYPlot();
     // // XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
     // // plot.setRenderer(renderer);
-    //        
+    //
     // // Return the image.
     // ChartUtilities.writeChartAsPNG(out, chart, width, height);
     // }

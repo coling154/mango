@@ -44,7 +44,7 @@ public class ChartExportServlet extends HttpServlet {
         response.setContentType("text/csv");
 
         final ResourceBundle bundle = Common.getBundle();
-        final ReportCsvStreamer exportCreator = new ReportCsvStreamer(response.getWriter(), bundle);
+        final ReportCsvStreamer exportCreator = new ReportCsvStreamer(response.getWriter(), bundle, true);
 
         final ReportDataValue rdv = new ReportDataValue();
         MappedRowCallback<PointValueTime> callback = new MappedRowCallback<PointValueTime>() {
