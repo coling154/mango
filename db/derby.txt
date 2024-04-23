@@ -1,0 +1,2 @@
+driver 'org.apache.derby.jdbc.EmbeddedDriver';
+connect 'jdbc:derby:C:/Program Files/Apache Software Foundation/Tomcat 9.0/bin/mangoDB';
