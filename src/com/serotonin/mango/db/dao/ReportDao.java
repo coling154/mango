@@ -450,6 +450,11 @@ public class ReportDao extends BaseDao {
                                 .getBinaryStream()));
                         rp.setColour(rs.getString(7));
                         rp.setConsolidatedChart(charToBool(rs.getString(8)));
+                        rp.setScatterChart(charToBool(rs.getString(9)));
+                        rp.setPlotTitle(rs.getString(10));
+                        rp.setXAxisTitle(rs.getString(11));
+                        rp.setYAxisTitle(rs.getString(12));
+                        rp.setReferenceLine(rs.getInt(13));
                         return rp;
                     }
                 });
@@ -511,6 +516,10 @@ public class ReportDao extends BaseDao {
                                 .getBinaryStream()));
                         rp.setColour(rs.getString(7));
                         rp.setConsolidatedChart(charToBool(rs.getString(8)));
+                        rp.setPlotTitle(rs.getString(10));
+                        rp.setXAxisTitle(rs.getString(11));
+                        rp.setYAxisTitle(rs.getString(12));
+                        rp.setReferenceLine(rs.getInt(13));
                         return rp;
                     }
                 });

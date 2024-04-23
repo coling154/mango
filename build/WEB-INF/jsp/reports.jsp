@@ -27,50 +27,50 @@
     var reportPointsArray;
     var selectedReport;
     var emailRecipients;
-    
+
     function init() {
         ReportsDwr.init(function(response) {
             hide("hourglass");
             allPointsArray = response.data.points;
-            
+
             emailRecipients = new mango.erecip.EmailRecipients("recipients",
                     "<fmt:message key="reports.recipTestEmailMessage"/>", response.data.mailingLists, response.data.users);
             emailRecipients.write("emailRecipBody", "emailRecipients", null, "<fmt:message key="reports.emailRecipients"/>");
-            
+
             updateReportInstancesList(response.data.instances);
-            
+
             for (var i=0; i<response.data.reports.length; i++) {
                 appendReport(response.data.reports[i].id);
                 updateReport(response.data.reports[i].id, response.data.reports[i].name);
             }
-            
+
             <c:if test="${!empty param.wlid}">
               ReportsDwr.createReportFromWatchlist(${param.wlid}, loadReportCB);
             </c:if>
         });
     }
-    
+
     function loadReport(reportId, copy) {
         if (selectedReport)
             stopImageFader("r"+ selectedReport.id +"Img");
-        
+
         ReportsDwr.getReport(reportId, copy, loadReportCB);
-        
+
         if (copy)
         	reportId = <c:out value="<%= Common.NEW_ID %>"/>;
-        
+
         startImageFader("r"+ reportId +"Img");
         display("deleteImg", reportId != <c:out value="<%= Common.NEW_ID %>"/>);
         display("copyImg", reportId != <c:out value="<%= Common.NEW_ID %>"/>);
     }
-    
+
     function loadReportCB(report) {
     	if (!report)
     		return;
         if (!selectedReport)
             show($("reportDetails"));
         selectedReport = report;
-        
+
         $set("name", report.name);
         reportPointsArray = new Array();
         for (var i=0; i<report.points.length; i++)
@@ -84,47 +84,47 @@
         $set("prevPeriodType", report.previousPeriodType);
         $set("pastPeriodCount", report.pastPeriodCount);
         $set("pastPeriodType", report.pastPeriodType);
-        
+
         $set("fromYear", report.fromYear);
         $set("fromMonth", report.fromMonth);
         $set("fromDay", report.fromDay);
         $set("fromHour", report.fromHour);
         $set("fromMinute", report.fromMinute);
         $set("fromNone", report.fromNone);
-        
+
         $set("toYear", report.toYear);
         $set("toMonth", report.toMonth);
         $set("toDay", report.toDay);
         $set("toHour", report.toHour);
         $set("toMinute", report.toMinute);
         $set("toNone", report.toNone);
-        
+
         $set("schedule", report.schedule);
         $set("schedulePeriod", report.schedulePeriod);
         $set("runDelayMinutes", report.runDelayMinutes);
         $set("scheduleCron", report.scheduleCron);
-        
+
         $set("email", report.email);
         $set("includeData", report.includeData);
         $set("zipData", report.zipData);
         emailRecipients.updateRecipientList(report.recipients);
-        
+
         showMessage("userMessage");
-  
+
         writeReportPointsArray();
         updateDateRangeFields();
         updateScheduleFields();
         updateSchedulePeriodFields();
         updateEmailFields();
     }
-    
+
     function addPointToReport() {
         var pointId = $get("allPointsList");
         addToReportPointsArray(pointId, "", true);
         writeReportPointsArray();
     }
-    
-    function addToReportPointsArray(pointId, colour, consolidatedChart) {
+
+    function addToReportPointsArray(pointId, colour, consolidatedChart, scatterChart, plotTitle, xaxistitle, yaxistitle, referenceline) {
         var data = getPointData(pointId);
         if (data) {
             // Missing names imply that the point was deleted, so ignore.
@@ -133,11 +133,16 @@
                 pointName : data.name,
                 pointType : data.dataTypeMessage,
                 colour : !colour ? (!data.chartColour ? "" : data.chartColour) : colour,
-                consolidatedChart : consolidatedChart
+                consolidatedChart : consolidatedChart,
+                scatterChart : scatterChart,
+                plotTitle : plotTitle,
+                xaxistitle : xaxistitle,
+                yaxistitle : yaxistitle,
+                referenceline : referenceline
             };
         }
     }
-    
+
     function getPointData(pointId) {
         for (var i=0; i<allPointsArray.length; i++) {
             if (allPointsArray[i].id == pointId)
@@ -145,7 +150,7 @@
         }
         return null;
     }
-    
+
     function writeReportPointsArray() {
         dwr.util.removeAllRows("reportPointsTable");
         if (reportPointsArray.length == 0) {
@@ -167,10 +172,37 @@
                         return "<input type='checkbox'"+ (data.consolidatedChart ? " checked='checked'" : "") +
                                 " onclick='updatePointConsolidatedChart("+ data.pointId +", this.checked)'/>";
                     },
-                    function(data) { 
-                            return "<img src='images/bullet_delete.png' class='ptr' "+
-                                    "onclick='removeFromReportPointsArray("+ data.pointId +")'/>";
-                    }
+
+                  function(data) {
+                    return "<input type='radio' id= 'line' name= 'chartType"+data.pointId+"' value= 'F' onchange='updatePointChartType(" + data.pointId +", this.checked)'/>" +
+                            "<label for='line'>Line</label> " +
+                            "<input type='radio' id= 'scatter' name= 'chartType" + data.pointId + "' value= 'T' onchange='updatePointChartType(" + data.pointId +", this.checked)'/" +
+                            "><label for='scatter'>Scatter</label>";
+                  },
+
+                  function(data) {
+                    return "<input type='text' value='"+ data.plottitle +"' "+
+                            "onblur='updatePointTitle("+ data.pointId +", this.value)'/>";
+                  },
+
+                  function(data) {
+                    return "<input type='text' value='"+ data.xaxistitle +"' "+
+                            "onblur='updateXAxisTitle("+ data.pointId +", this.value)'/>";
+                  },
+
+                  function(data) {
+                    return "<input type='text' value='"+ data.yaxistitle +"' "+
+                            "onblur='updateYAxisTitle("+ data.pointId +", this.value)'/>";
+                  },
+                  function(data) {
+                    return "<input type='text' value='"+ data.referenceline +"' "+
+                            "onblur='updateRefrenceLine("+ data.pointId +", this.value)'/>";
+                  },
+
+                  function(data) {
+                    return "<img src='images/bullet_delete.png' class='ptr' "+
+                            "onclick='removeFromReportPointsArray("+ data.pointId +")'/>";
+                  }
                 ],
                 {
                     rowCreator:function(options) {
@@ -188,19 +220,19 @@
         }
         updatePointsList();
     }
-    
+
     function updatePointColour(pointId, colour) {
     	var item = getElement(reportPointsArray, pointId, "pointId");
     	if (item)
     		item["colour"] = colour;
     }
-    
+
     function updatePointConsolidatedChart(pointId, consolidatedChart) {
         var item = getElement(reportPointsArray, pointId, "pointId");
         if (item)
             item["consolidatedChart"] = consolidatedChart;
     }
-    
+
     function updatePointsList() {
         dwr.util.removeAllOptions("allPointsList");
         var availPoints = new Array();
@@ -212,13 +244,13 @@
                     break;
                 }
             }
-            
+
             if (!found)
                 availPoints[availPoints.length] = allPointsArray[i];
         }
         dwr.util.addOptions("allPointsList", availPoints, "id", "name");
     }
-    
+
     function removeFromReportPointsArray(pointId) {
         for (var i=reportPointsArray.length-1; i>=0; i--) {
             if (reportPointsArray[i].pointId == pointId)
@@ -226,7 +258,7 @@
         }
         writeReportPointsArray();
     }
-    
+
     function updateReportInstancesList(instanceArray) {
         stopImageFader("reportInstancesRefreshImg");
         dwr.util.removeAllRows("reportInstancesList");
@@ -246,27 +278,27 @@
                         return "<input type='checkbox'"+ (ri.preventPurge ? " checked='checked'" : "") +
                                 " onclick='ReportsDwr.setPreventPurge("+ ri.id +", this.checked)'/>";
                     },
-                    function(ri) { 
+                    function(ri) {
                         if (ri.state == <c:out value="<%= ReportInstance.STATE_NOT_STARTED %>"/> ||
                                 ri.state == <c:out value="<%= ReportInstance.STATE_STARTED %>"/>)
                             return "";
-                            
+
                         var result = "<img src='images/bullet_down.png' class='ptr' title='<fmt:message key="reports.export"/>' "+
                                 "onclick='exportData(\""+ encodeQuotes(ri.name) +"\", "+ ri.id +")'/>";
-                        
+
                         if (ri.includeEvents != <c:out value="<%= ReportVO.EVENTS_NONE %>"/>)
                             result += "<img src='images/flag_white.png' class='ptr' title='<fmt:message key="reports.eventExport"/>' "+
                                     "onclick='exportEventData(\""+ encodeQuotes(ri.name) +"\", "+ ri.id +")'/>";
-                        
+
                         if (ri.includeUserComments)
                             result += "<img src='images/comment.png' class='ptr' title='<fmt:message key="reports.userCommentExport"/>' "+
                                     "onclick='exportUserComments(\""+ encodeQuotes(ri.name) +"\", "+ ri.id +")'/>";
-                        
+
                         result += "<img src='images/icon_chart.png' class='ptr' title='<fmt:message key="reports.charts"/>' "+
                                 "onclick='viewChart("+ ri.id +")'/>"+
                                 "<img id='ri"+ ri.id +"DeleteImg' src='images/bullet_delete.png' class='ptr' "+
                                 "onclick='deleteReportInstance("+ ri.id +")'/> ";
-                        
+
                         return result;
                     }
                 ],
@@ -287,7 +319,7 @@
                 });
         }
     }
-    
+
     function deleteReportInstance(instanceId) {
         var img = $("ri"+ instanceId +"DeleteImg");
         img.src = "images/bullet_black.png";
@@ -296,34 +328,34 @@
         startImageFader("reportInstancesRefreshImg");
         ReportsDwr.deleteReportInstance(instanceId, updateReportInstancesList);
     }
-    
+
     function exportData(name, instanceId) {
         window.location = "export/"+ name +".csv?instanceId="+ instanceId;
     }
-    
+
     function exportEventData(name, instanceId) {
         window.location = "eventExport/"+ name +"Events.csv?instanceId="+ instanceId;
     }
-    
+
     function exportUserComments(name, instanceId) {
         window.location = "userCommentExport/"+ name +"Comments.csv?instanceId="+ instanceId;
     }
-    
+
     function viewChart(instanceId) {
         window.open("reportChart.shtm?instanceId="+ instanceId, "chartTarget");
     }
-    
+
     function refreshReportInstanceList() {
         ReportsDwr.getReportInstances(updateReportInstancesList);
         startImageFader("reportInstancesRefreshImg");
     }
-    
+
     function updateDateRangeFields() {
         var dateRangeType = $get("dateRangeType");
         if (dateRangeType == 1) {
             setDisabled("relprev", false);
             setDisabled("relpast", false);
-        
+
             var relativeType = $get("relativeType");
             if (relativeType == 1) {
                 setDisabled("prevPeriodCount", false);
@@ -337,7 +369,7 @@
                 setDisabled("pastPeriodCount", false);
                 setDisabled("pastPeriodType", false);
             }
-            
+
             setDisabled("fromYear", true);
             setDisabled("fromMonth", true);
             setDisabled("fromDay", true);
@@ -358,7 +390,7 @@
             setDisabled("prevPeriodType", true);
             setDisabled("pastPeriodCount", true);
             setDisabled("pastPeriodType", true);
-            
+
             var inception = $get("fromNone");
             setDisabled("fromYear", inception);
             setDisabled("fromMonth", inception);
@@ -366,7 +398,7 @@
             setDisabled("fromHour", inception);
             setDisabled("fromMinute", inception);
             setDisabled("fromNone", false);
-            
+
             var now = $get("toNone");
             setDisabled("toYear", now);
             setDisabled("toMonth", now);
@@ -376,31 +408,60 @@
             setDisabled("toNone", false);
         }
     }
-    
+
     function updateScheduleFields() {
         display("scheduleDetails", $get("schedule"));
     }
-    
+
     function updateSchedulePeriodFields() {
         var schedulePeriod = $get("schedulePeriod");
         setDisabled("runDelayMinutes", schedulePeriod == <c:out value="<%= ReportVO.SCHEDULE_CRON %>"/>);
         setDisabled("scheduleCron", schedulePeriod != <c:out value="<%= ReportVO.SCHEDULE_CRON %>"/>);
     }
-    
+
     function updateEmailFields() {
         var email = $get("email");
         display("emailDetails", email);
         display("emailRecipBody", email);
     }
-    
+    function updatePointChartType(pointId, charttype) {
+      var item = getElement(reportPointsArray, pointId, "pointId");
+      if(item)
+        item["charttype"] = charttype;
+    }
+
+    function updatePointTitle(pointId, plottitle) {
+      var item = getElement(reportPointsArray, pointId, "pointId");
+      if (item)
+        item["plottitle"] = plottitle;
+    }
+
+    function updateXAxisTitle(pointId, xaxistitle) {
+      var item = getElement(reportPointsArray, pointId, "pointId");
+      if (item)
+        item["xaxistitle"] = xAxisTitle;
+    }
+
+    function updateYAxisTitle(pointId, yaxistitle) {
+      var item = getElement(reportPointsArray, pointId, "pointId");
+      if (item)
+        item["yaxistitle"] = yaxistitle;
+    }
+    function updateRefrenceLine(pointId, refrenceline) {
+      var item = getElement(reportPointsArray, pointId, "pointId");
+      if (item)
+        item["birefringence"] = refrenceline;
+    }
+
     function getReportPointIdsArray() {
         var points = new Array();
         for (var i=0; i<reportPointsArray.length; i++)
             points[points.length] = { pointId: reportPointsArray[i].pointId, colour: reportPointsArray[i].colour,
-        		    consolidatedChart: reportPointsArray[i].consolidatedChart };
+        		    consolidatedChart: reportPointsArray[i].consolidatedChart, scatterChart: reportPointsArray[i].scatterChart,
+                    plotTitle: reportPointsArray[i].plotTitle, xaxistitle: reportPointsArray[i].xaxistitle, yaxistitle: reportPointsArray[i].yaxistitle, referenceline: reportPointsArray[i].referenceline};
         return points;
     }
-    
+
     function saveReport() {
         ReportsDwr.saveReport(selectedReport.id, $get("name"), getReportPointIdsArray(), $get("includeEvents"),
                 $get("includeUserComments"), $get("dateRangeType"), $get("relativeType"), $get("prevPeriodCount"),
@@ -411,7 +472,7 @@
                 $get("includeData"), $get("zipData"), emailRecipients.createRecipientArray(), function(response) {
             stopImageFader("saveImg");
             clearMessages();
-            
+
             if (response.hasMessages)
                 showMessages(response.messages);
             else {
@@ -431,15 +492,15 @@
         });
         startImageFader("saveImg");
     }
-    
+
     function appendReport(reportId) {
         createFromTemplate("r_TEMPLATE_", reportId, "reportsTable");
     }
-    
+
     function updateReport(id, name) {
         $("r"+ id +"Name").innerHTML = name;
     }
-    
+
     function clearMessages() {
         showMessage("userMessage");
         showMessage("nameError");
@@ -450,7 +511,7 @@
         showMessage("scheduleCronError");
         showMessage("recipientsError");
     }
-    
+
     function showMessages(messages) {
         for (var i=0; i<messages.length; i++) {
             if (messages[i].contextKey)
@@ -459,7 +520,7 @@
                 alert(messages[i].genericMessage);
         }
     }
-  
+
     function deleteReport() {
         ReportsDwr.deleteReport(selectedReport.id);
         stopImageFader("r"+ selectedReport.id +"Img");
@@ -467,11 +528,11 @@
         hide("reportDetails");
         selectedReport = null;
     }
-    
+
     function runReport() {
         if (hasImageFader("runImg"))
             return;
-        
+
         ReportsDwr.runReport($get("name"), getReportPointIdsArray(), $get("includeEvents"),
                 $get("includeUserComments"), $get("dateRangeType"), $get("relativeType"), $get("prevPeriodCount"),
                 $get("prevPeriodType"), $get("pastPeriodCount"), $get("pastPeriodType"), $get("fromNone"),
@@ -480,7 +541,7 @@
                 $get("email"), $get("includeData"), $get("zipData"), emailRecipients.createRecipientArray(), function(response) {
             stopImageFader("runImg");
             clearMessages();
-            
+
             if (response.hasMessages)
                 showMessages(response.messages);
             else {
@@ -491,7 +552,7 @@
         startImageFader("runImg");
     }
   </script>
-  
+
   <table cellpadding="0" cellspacing="0"><tr><td>
     <div class="borderDiv marB" style="max-height:300px;overflow:auto;">
       <table width="100%">
@@ -506,7 +567,7 @@
           </td>
         </tr>
       </table>
-      
+
       <table cellspacing="1">
         <tr class="rowHeader">
           <td><fmt:message key="reports.reportName"/></td>
@@ -524,7 +585,7 @@
       </table>
     </div>
   </td></tr></table>
-  
+
   <table cellpadding="0" cellspacing="0">
     <tr>
       <td valign="top">
@@ -548,7 +609,7 @@
           </table>
         </div>
       </td>
-      
+
       <td valign="top" id="reportDetails" style="display:none;">
         <div class="borderDiv">
           <table width="100%">
@@ -566,7 +627,7 @@
             </tr>
             <tr><td class="formError" id="userMessage"></td></tr>
           </table>
-          
+
           <table>
             <tr>
               <td class="formLabelRequired"><fmt:message key="reports.reportName"/></td>
@@ -575,13 +636,13 @@
                 <span class="formError" id="nameError"></span>
               </td>
             </tr>
-            
+
             <tr>
               <td class="formLabelRequired"><fmt:message key="common.points"/></td>
               <td class="formField">
                 <select id="allPointsList"></select>
                 <tag:img png="add" onclick="addPointToReport();" title="common.add"/>
-                
+
                 <table cellspacing="1">
                   <tbody id="reportPointsTableEmpty" style="display:none;">
                     <tr><th colspan="4"><fmt:message key="reports.noPoints"/></th></tr>
@@ -592,6 +653,11 @@
                       <td><fmt:message key="reports.dataType"/></td>
                       <td><fmt:message key="reports.colour"/></td>
                       <td><fmt:message key="reports.consolidatedChart"/></td>
+                      <td><fmt:message key="reports.scatterchart"/></td>
+                      <td><fmt:message key="reports.plottitle"/></td>
+                      <td><fmt:message key="reports.xaxistitle"/></td>
+                      <td><fmt:message key="reports.yaxistitle"/></td>
+                      <td><fmt:message key="reports.referenceline"/></td>
                       <td></td>
                     </tr>
                   </tbody>
@@ -600,7 +666,7 @@
                 <span id="pointsError" class="formError"></span>
               </td>
             </tr>
-            
+
             <tr>
               <td class="formLabelRequired"><fmt:message key="reports.events"/></td>
               <td class="formField">
@@ -611,19 +677,19 @@
                 </select>
               </td>
             </tr>
-            
+
             <tr>
               <td class="formLabelRequired"><fmt:message key="reports.comments"/></td>
               <td class="formField"><input type="checkbox" id="includeUserComments"/></td>
             </tr>
-            
+
             <tr>
               <td class="formLabelRequired"><fmt:message key="reports.dateRange"/></td>
               <td class="formField">
                 <table>
                   <tr><td>
-                    <input type="radio" name="dateRangeType" value="<c:out value="<%= ReportVO.DATE_RANGE_TYPE_RELATIVE %>"/>" id="drrel" 
-                            checked="checked" onchange="updateDateRangeFields()"/><label 
+                    <input type="radio" name="dateRangeType" value="<c:out value="<%= ReportVO.DATE_RANGE_TYPE_RELATIVE %>"/>" id="drrel"
+                            checked="checked" onchange="updateDateRangeFields()"/><label
                             for="drrel"><fmt:message key="reports.relative"/></label>
                   </td></tr>
                   <tr>
@@ -631,7 +697,7 @@
                       <table>
                         <tr>
                           <td valign="top"><input type="radio" name="relativeType" onchange="updateDateRangeFields()"
-                                  id="relprev" value="<c:out value="<%= ReportVO.RELATIVE_DATE_TYPE_PREVIOUS %>"/>" 
+                                  id="relprev" value="<c:out value="<%= ReportVO.RELATIVE_DATE_TYPE_PREVIOUS %>"/>"
                                   checked="checked"/><label for="relprev"><fmt:message key="reports.previous"/></label></td>
                           <td valign="top">
                             <input type="text" id="prevPeriodCount" class="formVeryShort"/>
@@ -643,7 +709,7 @@
                         </tr>
                         <tr>
                           <td valign="top"><input type="radio" name="relativeType" onchange="updateDateRangeFields()"
-                                  id="relpast" value="<c:out value="<%= ReportVO.RELATIVE_DATE_TYPE_PAST %>"/>"/><label 
+                                  id="relpast" value="<c:out value="<%= ReportVO.RELATIVE_DATE_TYPE_PAST %>"/>"/><label
                                   for="relpast"><fmt:message key="reports.past"/></label></td>
                           <td valign="top">
                             <input type="text" id="pastPeriodCount" class="formVeryShort"/>
@@ -656,9 +722,9 @@
                       </table>
                     </td>
                   </tr>
-                  
+
                   <tr><td>
-                    <input type="radio" name="dateRangeType" value="<c:out value="<%= ReportVO.DATE_RANGE_TYPE_SPECIFIC %>"/>" id="drspec" 
+                    <input type="radio" name="dateRangeType" value="<c:out value="<%= ReportVO.DATE_RANGE_TYPE_SPECIFIC %>"/>" id="drspec"
                             onchange="updateDateRangeFields()"/><label for="drspec"><fmt:message key="reports.specificDates"/></label>
                   </td></tr>
                   <tr>
@@ -690,7 +756,7 @@
                           <td><select id="toDay"><tag:dayOptions/></select></td>
                           <td><select id="toHour"><tag:hourOptions/></select></td>
                           <td><select id="toMinute"><tag:minuteOptions/></select></td>
-                          <td><input type="checkbox" name="toNone" id="toNone" 
+                          <td><input type="checkbox" name="toNone" id="toNone"
                                   onclick="updateDateRangeFields()"/><label for="toNone"><fmt:message key="common.latest"/></label></td>
                         </tr>
                       </table>
@@ -699,16 +765,16 @@
                 </table>
               </td>
             </tr>
-            
+
             <tr><td colspan="3" class="horzSeparator"></td></tr>
-            
+
             <tr>
               <td class="formLabelRequired"><fmt:message key="reports.schedule"/></td>
               <td class="formField">
                 <input type="checkbox" id="schedule" onclick="updateScheduleFields();"/>
               </td>
             </tr>
-            
+
             <tbody id="scheduleDetails">
               <tr>
                 <td class="formLabelRequired"><fmt:message key="reports.runEvery"/></td>
@@ -733,26 +799,26 @@
                 </td>
               </tr>
             </tbody>
-              
+
             <tr><td colspan="3" class="horzSeparator"></td></tr>
-            
+
             <tr>
               <td class="formLabelRequired"><fmt:message key="reports.emailReport"/></td>
               <td class="formField"><input type="checkbox" id="email" onclick="updateEmailFields();"/></td>
             </tr>
-              
+
             <tbody id="emailDetails">
               <tr>
                 <td class="formLabelRequired"><fmt:message key="reports.includeTabular"/></td>
                 <td class="formField"><input type="checkbox" id="includeData"/></td>
               </tr>
-              
+
               <tr>
                 <td class="formLabelRequired"><fmt:message key="reports.zipData"/></td>
                 <td class="formField"><input type="checkbox" id="zipData"/></td>
               </tr>
             </tbody>
-            
+
             <tbody id="emailRecipBody"></tbody>
           </table>
         </div>
