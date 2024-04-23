@@ -5,12 +5,18 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import com.serotonin.mango.vo.DataPointVO;
 import com.serotonin.util.SerializationHelper;
 
 public class ReportPointVO implements Serializable {
     private int pointId;
     private String colour;
     private boolean consolidatedChart;
+    private boolean scatterChart;
+    private String plotTitle;
+    private String xAxisTitle;
+    private String yAxisTitle;
+    private int referenceLine;
 
     public int getPointId() {
         return pointId;
@@ -34,6 +40,46 @@ public class ReportPointVO implements Serializable {
 
     public void setConsolidatedChart(boolean consolidatedChart) {
         this.consolidatedChart = consolidatedChart;
+    }
+
+    public boolean isScatterChart() {
+        return scatterChart;
+    }
+
+    public void setScatterChart(boolean scatterChart) {
+        this.scatterChart = scatterChart;
+    }
+
+    public String getPlotTitle() {
+        return plotTitle;
+    }
+
+    public void setPlotTitle(String plotTitle) {
+        this.plotTitle = plotTitle;
+    }
+
+    public String getXAxisTitle() {
+        return xAxisTitle;
+    }
+
+    public void setXAxisTitle(String xAxisTitle) {
+        this.xAxisTitle = xAxisTitle;
+    }
+
+    public String getYAxisTitle() {
+        return yAxisTitle;
+    }
+
+    public void setYAxisTitle(String yAxisTitle) {
+        this.yAxisTitle = yAxisTitle;
+    }
+
+    public int getReferenceLine() {
+        return referenceLine;
+    }
+
+    public void setReferenceLine(int referenceLine) {
+        this.referenceLine = referenceLine;
     }
 
     //

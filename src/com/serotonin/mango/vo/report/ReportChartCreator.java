@@ -472,7 +472,7 @@ public class ReportChartCreator {
             try {
                 if (createExportFile) {
                     exportFile = File.createTempFile("tempCSV", ".csv");
-                    reportCsvStreamer = new ReportCsvStreamer(new PrintWriter(new FileWriter(exportFile)), bundle);
+                    reportCsvStreamer = new ReportCsvStreamer(new PrintWriter(new FileWriter(exportFile)), bundle, true);
                 }
             }
             catch (IOException e) {

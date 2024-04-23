@@ -50,6 +50,7 @@ import com.serotonin.mango.vo.report.ReportInstance;
 import com.serotonin.mango.vo.report.ReportPointInfo;
 import com.serotonin.mango.vo.report.ReportUserComment;
 import com.serotonin.mango.vo.report.ReportVO;
+import com.serotonin.mango.vo.report.ReportCsvStreamer;
 import com.serotonin.util.SerializationHelper;
 import com.serotonin.util.StringUtils;
 import com.serotonin.web.i18n.I18NUtils;
@@ -195,18 +196,28 @@ public class ReportDao extends BaseDao {
      * This method should only be called by the ReportWorkItem.
      */
     private static final String REPORT_INSTANCE_POINTS_INSERT = "insert into reportInstancePoints " //
-            + "(reportInstanceId, dataSourceName, pointName, dataType, startValue, textRenderer, colour, consolidatedChart) "
-            + "values (?,?,?,?,?,?,?,?)";
+            + "(reportInstanceId, dataSourceName, pointName, dataType, startValue, textRenderer, colour, consolidatedChart, scatterchart, plottitle, xaxistitle, yaxistitle, referenceline) "
+            + "values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
     public static class PointInfo {
         private final DataPointVO point;
         private final String colour;
         private final boolean consolidatedChart;
+        private final boolean scatterChart;
+        private final String plotTitle;
+        private final String xAxisTitle;
+        private final String yAxisTitle;
+        private final int referenceLine;
 
-        public PointInfo(DataPointVO point, String colour, boolean consolidatedChart) {
+        public PointInfo(DataPointVO point, String colour, boolean consolidatedChart, boolean scatterChart, String plotTitle, String xAxisTitle, String yAxisTitle, int referenceLine) {
             this.point = point;
             this.colour = colour;
             this.consolidatedChart = consolidatedChart;
+            this.plotTitle = plotTitle;
+            this.scatterChart = scatterChart;
+            this.xAxisTitle = xAxisTitle;
+            this.yAxisTitle = yAxisTitle;
+            this.referenceLine = referenceLine;
         }
 
         public DataPointVO getPoint() {
@@ -220,6 +231,11 @@ public class ReportDao extends BaseDao {
         public boolean isConsolidatedChart() {
             return consolidatedChart;
         }
+        public boolean isScatterChart() { return scatterChart;}
+        public String getPlotTitle() { return plotTitle;}
+        public String getXAxisTitle() { return xAxisTitle;}
+        public String getYAxisTitle() { return yAxisTitle;}
+        public int getReferenceLine() { return referenceLine;}
     }
 
     public int runReport(final ReportInstance instance, List<PointInfo> points, ResourceBundle bundle) {
@@ -410,7 +426,7 @@ public class ReportDao extends BaseDao {
      * ordered), and sorted by time ascending.
      */
     private static final String REPORT_INSTANCE_POINT_SELECT = "select id, dataSourceName, pointName, dataType, " // 
-            + "startValue, textRenderer, colour, consolidatedChart from reportInstancePoints ";
+            + "startValue, textRenderer, colour, consolidatedChart, scatterchart, plottitle, xaxistitle, yaxistitle, referenceline from reportInstancePoints ";
     private static final String REPORT_INSTANCE_DATA_SELECT = "select rd.pointValue, rda.textPointValueShort, " //
             + "  rda.textPointValueLong, rd.ts, rda.sourceValue "
             + "from reportInstanceData rd "
@@ -477,6 +493,93 @@ public class ReportDao extends BaseDao {
                     });
         }
         handler.done();
+    }
+    public void reportInstanceDataHorizontal(int instanceId, ResourceBundle bundle, ReportCsvStreamer csvStreamer) {
+        // Retrieve point information.
+        List<ReportPointInfo> pointInfos = query(REPORT_INSTANCE_POINT_SELECT + "where reportInstanceId=?",
+                new Object[] { instanceId }, new GenericRowMapper<ReportPointInfo>() {
+                    public ReportPointInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
+                        ReportPointInfo rp = new ReportPointInfo();
+                        rp.setReportPointId(rs.getInt(1));
+                        rp.setDeviceName(rs.getString(2));
+                        rp.setPointName(rs.getString(3));
+                        rp.setDataType(rs.getInt(4));
+                        String startValue = rs.getString(5);
+                        if (startValue != null)
+                            rp.setStartValue(MangoValue.stringToValue(startValue, rp.getDataType()));
+                        rp.setTextRenderer((TextRenderer) SerializationHelper.readObject(rs.getBlob(6)
+                                .getBinaryStream()));
+                        rp.setColour(rs.getString(7));
+                        rp.setConsolidatedChart(charToBool(rs.getString(8)));
+                        return rp;
+                    }
+                });
+
+        csvStreamer.addHeader(bundle,pointInfos.size()); //writing headers for each point
+        List<List<ReportDataValue>> rdv_list_list = new ArrayList<>();// creating a list of lists to store all the report data values
+
+        int max = 0;
+
+        for (final ReportPointInfo point : pointInfos) { // For every group
+            List<ReportDataValue> rdv_list = new ArrayList<>();
+
+            final int pointId = point.getReportPointId();
+            final int dataType = point.getDataType();
+            ejt.query(REPORT_INSTANCE_DATA_SELECT + "where rd.reportInstancePointId=? order by rd.ts",
+                    new Object[] { point.getReportPointId() }, new RowCallbackHandler() {
+                        public void processRow(ResultSet rs) throws SQLException {
+
+                            ReportDataValue rdv = new ReportDataValue();
+                            rdv.setReportPointId(pointId);
+                            switch (dataType) {
+                                case (DataTypes.NUMERIC):
+                                    rdv.setValue(new NumericValue(rs.getDouble(1)));
+                                    break;
+                                case (DataTypes.BINARY):
+                                    rdv.setValue(new BinaryValue(rs.getDouble(1) == 1));
+                                    break;
+                                case (DataTypes.MULTISTATE):
+                                    rdv.setValue(new MultistateValue(rs.getInt(1)));
+                                    break;
+                                case (DataTypes.ALPHANUMERIC):
+                                    rdv.setValue(new AlphanumericValue(rs.getString(2)));
+                                    if (rs.wasNull())
+                                        rdv.setValue(new AlphanumericValue(rs.getString(3)));
+                                    break;
+                                case (DataTypes.IMAGE):
+                                    rdv.setValue(new ImageValue(Integer.parseInt(rs.getString(2)), rs.getInt(1)));
+                                    break;
+                                default:
+                                    rdv.setValue(null);
+                            }
+
+                            rdv.setTime(rs.getLong(4));
+                            rdv.setAnnotation(rs.getString(5));
+
+                            rdv_list.add(rdv);//add rdv to list rdv_list
+                        }
+                    }
+            );
+
+            rdv_list_list.add(rdv_list); //add rdv_list to the list of lists
+            max = Math.max(max, rdv_list.size()); // calculating max to ensure that all the null values are also written
+        }
+
+        List<ReportDataValue> rdvh;
+        for(int i=0; i<max; i++) {
+            rdvh = new ArrayList<>();
+            for(List<ReportDataValue> hor: rdv_list_list){
+                if(hor.size()>i) {
+                    rdvh.add(hor.get(i));
+                }
+                else{
+                    rdvh.add(null);
+                }
+            }
+            csvStreamer.pointDataHorizontal(rdvh, pointInfos); // traversing through the list of lists such that each time a row of all the points are written at a time
+        }
+
+        csvStreamer.done();
     }
 
     private static final String EVENT_SELECT = //
