@@ -66,7 +66,7 @@ public class ReportPointVO implements Serializable {
         this.xaxisTitle = xaxisTitle;
     }
 
-    public String getYaxisTitle() {
+    public String getyaxisTitle() {
         return yaxisTitle;
     }
 

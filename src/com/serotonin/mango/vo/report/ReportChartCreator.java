@@ -542,8 +542,8 @@ public class ReportChartCreator {
             try {
                 point.setScatterChart(pointInfo.isScatterChart());
                 point.setPlotTitle(pointInfo.getPlotTitle());
-                point.setXAxisTitle(pointInfo.getXAxisTitle());
-                point.setYAxisTitle(pointInfo.getYAxisTitle());
+                point.setXAxisTitle(pointInfo.getxaxisTitle());
+                point.setYAxisTitle(pointInfo.getyaxisTitle());
                 point.setReferenceLine(pointInfo.getReferenceLine());
                 point.setTextRenderer(pointInfo.getTextRenderer());
             }
