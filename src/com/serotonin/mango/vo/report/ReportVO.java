@@ -86,13 +86,6 @@ public class ReportVO implements Serializable {
     private boolean includeData = true;
     private boolean zipData = false;
 
-    //New variables
-    private boolean scatterChart;
-    private String plotTitle;
-    private String xAxisTitle;
-    private String yAxisTitle;
-    private int referenceLine;
-
     public ReportVO() {
         // Default the specific date fields.
         DateTime dt = DateUtils.truncateDateTime(new DateTime(), Common.TimePeriods.DAYS);
@@ -366,47 +359,6 @@ public class ReportVO implements Serializable {
         this.runDelayMinutes = runDelayMinutes;
     }
 
-    // New Set/Gets
-    public boolean isScatterChart() {
-        return scatterChart;
-    }
-
-    public void setScatterChart(boolean scatterChart) {
-        this.scatterChart = scatterChart;
-    }
-
-    public String getPlotTitle() {
-        return plotTitle;
-    }
-
-    public void setPlotTitle(String plotTitle) {
-        this.plotTitle = plotTitle;
-    }
-
-    public String getXAxisTitle() {
-        return xAxisTitle;
-    }
-
-    public void setXAxisTitle(String xAxisTitle) {
-        this.xAxisTitle = xAxisTitle;
-    }
-
-    public String getYAxisTitle() {
-        return yAxisTitle;
-    }
-
-    public void setYAxisTitle(String yAxisTitle) {
-        this.yAxisTitle = yAxisTitle;
-    }
-
-    public int getReferenceLine() {
-        return referenceLine;
-    }
-
-    public void setReferenceLine(int referenceLine) {
-        this.referenceLine = referenceLine;
-    }
-
     //
     //
     // Serialization
@@ -449,12 +401,6 @@ public class ReportVO implements Serializable {
         out.writeObject(recipients);
         out.writeBoolean(includeData);
         out.writeBoolean(zipData);
-
-        out.writeBoolean(scatterChart);
-        out.writeUTF(plotTitle);
-        out.writeUTF(xAxisTitle);
-        out.writeUTF(yAxisTitle);
-        out.writeInt(referenceLine);
     }
 
     @SuppressWarnings("unchecked")

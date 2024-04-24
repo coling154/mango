@@ -147,7 +147,8 @@ public class ReportChartCreator {
             if (ptsc.hasData()) {
                 if (inlinePrefix != null)
                     model.put("chartName", inlinePrefix + pointStat.getChartName());
-                pointStat.setImageData(ImageChartUtils.getChartData(ptsc, POINT_IMAGE_WIDTH, POINT_IMAGE_HEIGHT));
+                pointStat.setImageData(ImageChartUtils.getChartData(ptsc, POINT_IMAGE_WIDTH, POINT_IMAGE_HEIGHT, pointStat.isScatterChart(), pointStat.getPlotTitle(), pointStat.getxaxisTitle(), pointStat.getyaxisTitle(), pointStat.getReferenceLine()));
+                //getchartData updated with all parameters
             }
         }
 
@@ -285,9 +286,9 @@ public class ReportChartCreator {
         private byte[] imageData;
         private boolean scatterChart;
         private String plotTitle;
-        private String xAxisTitle;
-        private String yAxisTitle;
-        private int referenceLine;
+        private String xaxisTitle;
+        private String yaxisTitle;
+        private double referenceLine;
 
         public PointStatistics(int reportPointId) {
             this.reportPointId = reportPointId;
@@ -388,27 +389,27 @@ public class ReportChartCreator {
             this.plotTitle = plotTitle;
         }
 
-        public String getXAxisTitle() {
-            return xAxisTitle;
+        public String getxaxisTitle() {
+            return xaxisTitle;
         }
 
-        public void setXAxisTitle(String xAxisTitle) {
-            this.xAxisTitle = xAxisTitle;
+        public void setxaxisTitle(String xaxisTitle) {
+            this.xaxisTitle = xaxisTitle;
         }
 
-        public String getYAxisTitle() {
-            return yAxisTitle;
+        public String getyaxisTitle() {
+            return yaxisTitle;
         }
 
-        public void setYAxisTitle(String yAxisTitle) {
-            this.yAxisTitle = yAxisTitle;
+        public void setyaxisTitle(String yaxisTitle) {
+            this.yaxisTitle = yaxisTitle;
         }
 
-        public int getReferenceLine() {
+        public double getReferenceLine() {
             return referenceLine;
         }
 
-        public void setReferenceLine(int referenceLine) {
+        public void setReferenceLine(double referenceLine) {
             this.referenceLine = referenceLine;
         }
         public String getAnalogMinimum() {
@@ -539,17 +540,13 @@ public class ReportChartCreator {
             point.setDataType(pointInfo.getDataType());
             point.setDataTypeDescription(DataTypes.getDataTypeMessage(pointInfo.getDataType()).getLocalizedMessage(
                     bundle));
-            try {
+
                 point.setScatterChart(pointInfo.isScatterChart());
                 point.setPlotTitle(pointInfo.getPlotTitle());
-                point.setXAxisTitle(pointInfo.getXAxisTitle());
-                point.setYAxisTitle(pointInfo.getYAxisTitle());
+                point.setxaxisTitle(pointInfo.getxaxisTitle());
+                point.setyaxisTitle(pointInfo.getyaxisTitle());
                 point.setReferenceLine(pointInfo.getReferenceLine());
                 point.setTextRenderer(pointInfo.getTextRenderer());
-            }
-            catch(NullPointerException e) {
-                // do nothing ?
-            }
             if (pointInfo.getStartValue() != null)
                 point.setStartValue(pointInfo.getTextRenderer().getText(pointInfo.getStartValue(),
                         TextRenderer.HINT_FULL));

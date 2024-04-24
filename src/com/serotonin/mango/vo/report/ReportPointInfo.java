@@ -37,7 +37,7 @@ public class ReportPointInfo {
     private String plotTitle;
     private String xaxisTitle;
     private String yaxisTitle;
-    private int referenceLine;
+    private double referenceLine;
 
 
     public String getExtendedName() {
@@ -140,11 +140,11 @@ public class ReportPointInfo {
         this.yaxisTitle = yaxisTitle;
     }
 
-    public int getReferenceLine() {
+    public double getReferenceLine() {
         return referenceLine;
     }
 
-    public void setReferenceLine(int referenceLine) {
+    public void setReferenceLine(double referenceLine) {
         this.referenceLine = referenceLine;
     }
 }

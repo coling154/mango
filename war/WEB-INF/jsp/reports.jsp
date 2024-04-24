@@ -132,7 +132,7 @@
         writeReportPointsArray();
     }
 
-    function addToReportPointsArray(pointId, colour, consolidatedChart, title) {
+    function addToReportPointsArray(pointId, colour, consolidatedChart, scatterchart, title, xaxisTitle, yaxisTitle, referenceline) {
         var data = getPointData(pointId);
         if (data) {
             // Missing names imply that the point was deleted, so ignore.
@@ -142,7 +142,7 @@
                 pointType : data.dataTypeMessage,
                 colour : !colour ? (!data.chartColour ? "" : data.chartColour) : colour,
                 consolidatedChart : consolidatedChart,
-                //scatterchart : scatterchart
+                scatterchart : scatterchart,
                 title : !title ? (!data.title ? "" : data.title) : title,
                 xaxisTitle : !xaxisTitle ? (!data.xaxisTitle ? "" : data.xaxisTitle) : xaxisTitle,
                 yaxisTitle : !yaxisTitle ? (!data.yaxisTitle ? "" : data.yaxisTitle) : yaxisTitle,
@@ -180,10 +180,7 @@
                         return "<input type='checkbox'"+ (data.consolidatedChart ? " checked='checked'" : "") +
                                 " onclick='updatePointConsolidatedChart("+ data.pointId +", this.checked)'/>";
                     },
-                    function(data) {
-                            return "<img src='images/bullet_delete.png' class='ptr' "+
-                                    "onclick='removeFromReportPointsArray("+ data.pointId +")'/>";
-                    },
+
                   function(data) {
                     return "<input type='radio' id= 'line' name= 'chartType"+data.pointId+
                     "' value= 'line' onchange='updatePointChartType("
@@ -205,6 +202,10 @@
                             "onblur='updateyaxisTitle("+ data.pointId +", this.value)'/>";
                   },
 
+                  function(data) {
+                    return "<input type='text' value='"+ data.referenceline +"' "+
+                            "onblur='referenceline("+ data.pointId +", this.value)'/>";
+                  },
                   function(data) {
                     return "<img src='images/bullet_delete.png' class='ptr' "+
                             "onclick='removeFromReportPointsArray("+ data.pointId +")'/>";
@@ -260,7 +261,7 @@
     function updateyaxisTitle(pointId, yaxisTitle) {
       var item = getElement(reportPointsArray, pointId, "pointId");
       if (item)
-        item["yxisTitle"] = yaxisTitle;
+        item["yaxisTitle"] = yaxisTitle;
     }
         function referenceline(pointId, yaxisTitle) {
           var item = getElement(reportPointsArray, pointId, "pointId");

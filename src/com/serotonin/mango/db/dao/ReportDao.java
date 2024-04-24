@@ -207,9 +207,9 @@ public class ReportDao extends BaseDao {
         private final String plotTitle;
         private final String xaxisTitle;
         private final String yaxisTitle;
-        private final int referenceLine;
+        private final double referenceLine;
 
-        public PointInfo(DataPointVO point, String colour, boolean consolidatedChart, boolean scatterChart, String plotTitle, String xaxisTitle, String yaxisTitle, int referenceLine) {
+        public PointInfo(DataPointVO point, String colour, boolean consolidatedChart, boolean scatterChart, String plotTitle, String xaxisTitle, String yaxisTitle, double referenceLine) {
             this.point = point;
             this.colour = colour;
             this.consolidatedChart = consolidatedChart;
@@ -234,8 +234,8 @@ public class ReportDao extends BaseDao {
         public boolean isScatterChart() { return scatterChart;}
         public String getPlotTitle() { return plotTitle;}
         public String getxaxisTitle() { return xaxisTitle;}
-        public String getYaxisTitle() { return yaxisTitle;}
-        public int getReferenceLine() { return referenceLine;}
+        public String getyaxisTitle() { return yaxisTitle;}
+        public double getReferenceLine() { return referenceLine;}
     }
 
     public int runReport(final ReportInstance instance, List<PointInfo> points, ResourceBundle bundle) {
@@ -291,8 +291,15 @@ public class ReportDao extends BaseDao {
                     new Object[] { instance.getId(), point.getDeviceName(), name, dataType,
                             DataTypes.valueToString(startValue),
                             SerializationHelper.writeObject(point.getTextRenderer()), pointInfo.getColour(),
-                            boolToChar(pointInfo.isConsolidatedChart()) }, new int[] { Types.INTEGER, Types.VARCHAR,
-                            Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.BLOB, Types.VARCHAR, Types.CHAR });
+                            boolToChar(pointInfo.isConsolidatedChart()),boolToChar(pointInfo.isScatterChart()), pointInfo.getPlotTitle(), pointInfo.getxaxisTitle(),
+                            pointInfo.getyaxisTitle(), pointInfo.getReferenceLine()},
+                            new int[] { Types.INTEGER, Types.VARCHAR,
+                                        Types.VARCHAR, Types.INTEGER,
+                                        Types.VARCHAR, Types.BLOB,
+                                        Types.VARCHAR, Types.CHAR,
+                                        Types.CHAR, Types.VARCHAR,
+                                        Types.VARCHAR, Types.VARCHAR,
+                                        Types.DOUBLE});
 
             // Insert the reportInstanceData records
             String insertSQL = "insert into reportInstanceData " + "  select id, " + reportPointId
@@ -450,6 +457,11 @@ public class ReportDao extends BaseDao {
                                 .getBinaryStream()));
                         rp.setColour(rs.getString(7));
                         rp.setConsolidatedChart(charToBool(rs.getString(8)));
+                        rp.setScatterChart(charToBool(rs.getString(9)));
+                        rp.setPlotTitle(rs.getString(10));
+                        rp.setxaxisTitle(rs.getString(11));
+                        rp.setyaxisTitle(rs.getString(12));
+                        rp.setReferenceLine(rs.getDouble(13));
                         return rp;
                     }
                 });
@@ -511,6 +523,7 @@ public class ReportDao extends BaseDao {
                                 .getBinaryStream()));
                         rp.setColour(rs.getString(7));
                         rp.setConsolidatedChart(charToBool(rs.getString(8)));
+
                         return rp;
                     }
                 });
