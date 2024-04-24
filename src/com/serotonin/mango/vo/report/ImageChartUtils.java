@@ -17,7 +17,21 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.serotonin.mango.vo.report;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.ValueMarker;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.ui.TextAnchor;
 
+import java.awt.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
 import java.awt.Color;
 import java.awt.Paint;
 import java.io.ByteArrayInputStream;
@@ -47,6 +61,8 @@ import com.serotonin.mango.db.dao.SystemSettingsDao;
 import com.serotonin.mango.rt.dataImage.PointValueTime;
 import com.serotonin.mango.util.mindprod.StripEntities;
 import com.serotonin.util.StringUtils;
+import org.jfree.chart.plot.ValueMarker;
+
 
 /**
  * @author Matthew Lohbihler
@@ -194,118 +210,92 @@ public class ImageChartUtils {
         ChartUtilities.writeChartAsPNG(out, chart, width, height);
     }
 
-    public static void writeChartFull(PointTimeSeriesCollection pointTimeSeriesCollection, boolean showLegend,
-                                      OutputStream out, int width, int height, boolean chartType, String title, String xlabel, String ylabel, double yref) throws IOException {
 
-        //new writeChart function
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(title, xlabel, ylabel, null, showLegend, false, false); //new annotations added
+    public static void writeChartFull(PointTimeSeriesCollection dataCollection, boolean displayLegend,
+                                      OutputStream outputStream, int chartWidth, int chartHeight, boolean isLineChart,
+                                      String chartTitle, String xAxisLabel, String yAxisLabel, double yAxisReference)
+            throws IOException {
+
+
+        double minValue = 0;
+        double maxValue = 1;
+
+        // Create the chart
+        JFreeChart chart = ChartFactory.createTimeSeriesChart(chartTitle, xAxisLabel, yAxisLabel, null, displayLegend, false, false);
+
+        // Set chart background color
         chart.setBackgroundPaint(SystemSettingsDao.getColour(SystemSettingsDao.CHART_BACKGROUND_COLOUR));
 
+        // Get the plot and configure its appearance
         XYPlot plot = chart.getXYPlot();
         plot.setBackgroundPaint(SystemSettingsDao.getColour(SystemSettingsDao.PLOT_BACKGROUND_COLOUR));
-        Color gridlines = SystemSettingsDao.getColour(SystemSettingsDao.PLOT_GRIDLINE_COLOUR);
-        plot.setDomainGridlinePaint(gridlines);
-        plot.setRangeGridlinePaint(gridlines);
+        Color gridColor = SystemSettingsDao.getColour(SystemSettingsDao.PLOT_GRIDLINE_COLOUR);
+        plot.setDomainGridlinePaint(gridColor);
+        plot.setRangeGridlinePaint(gridColor);
 
-        double numericMin = 0;
-        double numericMax = 1;
-        if (pointTimeSeriesCollection.hasNumericData()) {
+        // Add a reference line
+        ValueMarker referenceLine = new ValueMarker(yAxisReference);
+        referenceLine.setPaint(Color.RED);
+        plot.addRangeMarker(referenceLine);
 
-            //            XYSplineRenderer numericRenderer = new XYSplineRenderer();
-            //            numericRenderer.setBaseShapesVisible(false);
-            XYLineAndShapeRenderer numericRenderer = new XYLineAndShapeRenderer(!chartType, chartType); //logic for toggle chartType
+        // Configure renderer based on chart type
+        XYItemRenderer renderer = isLineChart ? new XYLineAndShapeRenderer(true, false) : new XYLineAndShapeRenderer(false, true);
 
-            plot.setDataset(NUMERIC_DATA_INDEX, pointTimeSeriesCollection.getNumericTimeSeriesCollection());
-            plot.setRenderer(NUMERIC_DATA_INDEX, numericRenderer);
-            //plotting the new Reference Line
-            if(yref != 0) {
-                XYLineAndShapeRenderer yrefLine = new XYLineAndShapeRenderer(true, false);
-                yrefLine.setSeriesPaint(0, Color.MAGENTA);
+        // Handle numeric data
+        if (dataCollection.hasNumericData()) {
+            TimeSeriesCollection numericDataSet = dataCollection.getNumericTimeSeriesCollection();
+            plot.setDataset(numericDataSet);
+            plot.setRenderer(renderer);
 
-
-                TimeSeries ts = new TimeSeries("yref", null, null, Second.class);
-                ts.add(new Second(new Date((long) plot.getDomainAxis().getLowerBound())), yref);
-                ts.add(new Second(new Date((long) plot.getDomainAxis().getUpperBound())), yref);
-
-
-                TimeSeriesCollection tsc = new TimeSeriesCollection(ts);
-                plot.setDataset(REFERENCE_INDEX, tsc);
-                plot.setRenderer(REFERENCE_INDEX, yrefLine);}
-
-            for (int i = 0; i < pointTimeSeriesCollection.getNumericPaint().size(); i++) {
-                Paint paint = pointTimeSeriesCollection.getNumericPaint().get(i);
-                if (paint != null)
-                    numericRenderer.setSeriesPaint(i, paint, false);
-            }
-
-            numericMin = plot.getRangeAxis().getLowerBound();
-            numericMax = plot.getRangeAxis().getUpperBound();
-
-            if (!pointTimeSeriesCollection.hasMultiplePoints()) {
-                // If this chart displays a single point, check if there should be a range description.
-                TimeSeries timeSeries = pointTimeSeriesCollection.getNumericTimeSeriesCollection().getSeries(0);
-                String desc = timeSeries.getRangeDescription();
-                if (!StringUtils.isEmpty(desc)) {
-                    // Replace any HTML entities with Java equivalents
-                    desc = StripEntities.stripHTMLEntities(desc, ' ');
-                    plot.getRangeAxis().setLabel(desc);
+            // Set series paint
+            List<Paint> numericPaints = dataCollection.getNumericPaint();
+            for (int i = 0; i < numericPaints.size(); i++) {
+                Paint paint = numericPaints.get(i);
+                if (paint != null) {
+                    renderer.setSeriesPaint(i, paint);
                 }
             }
-        }
-        else
+
+            // Update range axis label if needed
+            if (!dataCollection.hasMultiplePoints()) {
+                TimeSeries timeSeries = numericDataSet.getSeries(0);
+                String description = timeSeries.getRangeDescription();
+                if (description != null && !description.isEmpty()) {
+                    plot.getRangeAxis().setLabel(StripEntities.stripHTMLEntities(description, ' '));
+                }
+            }
+        } else {
+            // Hide range axis if no numeric data
             plot.getRangeAxis().setVisible(false);
+        }
 
-        if (pointTimeSeriesCollection.hasDiscreteData()) {
-            XYStepRenderer discreteRenderer = new XYStepRenderer();
-            plot.setRenderer(DISCRETE_DATA_INDEX, discreteRenderer, false);
-
-            // Plot the data
-            int discreteValueCount = pointTimeSeriesCollection.getDiscreteValueCount();
-            double interval = (numericMax - numericMin) / (discreteValueCount + 1);
-            TimeSeriesCollection timeSeriesCollection = new TimeSeriesCollection();
-
+        // Handle discrete data
+        if (dataCollection.hasDiscreteData()) {
+            TimeSeriesCollection discreteDataSet = new TimeSeriesCollection();
             int intervalIndex = 1;
-            for (int i = 0; i < pointTimeSeriesCollection.getDiscreteSeriesCount(); i++) {
-                DiscreteTimeSeries dts = pointTimeSeriesCollection.getDiscreteTimeSeries(i);
+            int discreteValueCount = dataCollection.getDiscreteValueCount();
+            minValue = plot.getRangeAxis().getLowerBound();
+            maxValue = plot.getRangeAxis().getUpperBound();
+
+            double interval = (maxValue - minValue) / (discreteValueCount + 1);
+
+            for (int i = 0; i < dataCollection.getDiscreteSeriesCount(); i++) {
+                DiscreteTimeSeries dts = dataCollection.getDiscreteTimeSeries(i);
                 TimeSeries ts = new TimeSeries(dts.getName(), null, null, Second.class);
 
-                for (PointValueTime pvt : dts.getValueTimes())
-                    ImageChartUtils.addSecond(ts, pvt.getTime(),
-                            numericMin + (interval * (dts.getValueIndex(pvt.getValue()) + intervalIndex)));
-
-                timeSeriesCollection.addSeries(ts);
-
-                intervalIndex += dts.getDiscreteValueCount();
-            }
-
-            plot.setDataset(DISCRETE_DATA_INDEX, timeSeriesCollection);
-
-            // Add the value annotations.
-            double annoX = plot.getDomainAxis().getLowerBound();
-            intervalIndex = 1;
-            for (int i = 0; i < pointTimeSeriesCollection.getDiscreteSeriesCount(); i++) {
-                DiscreteTimeSeries dts = pointTimeSeriesCollection.getDiscreteTimeSeries(i);
-                if (dts.getPaint() != null)
-                    discreteRenderer.setSeriesPaint(i, dts.getPaint());
-
-                for (int j = 0; j < dts.getDiscreteValueCount(); j++) {
-                    XYTextAnnotation anno = new XYTextAnnotation(" " + dts.getValueText(j), annoX, numericMin
-                            + (interval * (j + intervalIndex)));
-                    if (!pointTimeSeriesCollection.hasNumericData() && intervalIndex + j == discreteValueCount)
-                        // This prevents the top label from getting cut off
-                        anno.setTextAnchor(TextAnchor.TOP_LEFT);
-                    else
-                        anno.setTextAnchor(TextAnchor.BOTTOM_LEFT);
-                    anno.setPaint(discreteRenderer.lookupSeriesPaint(i));
-                    plot.addAnnotation(anno);
+                for (PointValueTime pvt : dts.getValueTimes()) {
+                    ImageChartUtils.addSecond(ts, pvt.getTime(), minValue + (interval * (dts.getValueIndex(pvt.getValue()) + intervalIndex)));
                 }
 
+                discreteDataSet.addSeries(ts);
                 intervalIndex += dts.getDiscreteValueCount();
             }
+
+            plot.setDataset(DISCRETE_DATA_INDEX, discreteDataSet);
         }
 
-        // Return the image.
-        ChartUtilities.writeChartAsPNG(out, chart, width, height);
+        // Write the chart as PNG to the output stream
+        ChartUtilities.writeChartAsPNG(outputStream, chart, chartWidth, chartHeight);
     }
 
     // public static void writeChart(TimeSeries timeSeries, OutputStream out, int width, int height) throws IOException
