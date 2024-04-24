@@ -59,7 +59,7 @@ abstract public class ReportExportBase extends HttpServlet {
 
         ResourceBundle bundle = Common.getBundle();
         if (content == CONTENT_REPORT) {
-            ReportCsvStreamer creator = new ReportCsvStreamer(response.getWriter(), bundle, false);
+            ReportCsvStreamer creator = new ReportCsvStreamer(response.getWriter(), bundle, true);
             reportDao.reportInstanceDataHorizontal(instanceId, bundle, creator);
         }
         else if (content == CONTENT_EVENTS)

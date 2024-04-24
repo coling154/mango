@@ -5,82 +5,49 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import com.serotonin.mango.vo.DataPointVO;
 import com.serotonin.util.SerializationHelper;
 
 public class ReportPointVO implements Serializable {
     private int pointId;
     private String colour;
     private boolean consolidatedChart;
-    private boolean scatterChart;
-    private String plotTitle;
-    private String xaxisTitle;
-    private String yaxisTitle;
-    private double referenceLine;
+    private boolean charttype;
+    private String title;
+    private String xlabel;
+    private String ylabel;
+    private double yref;
 
-    public int getPointId() {
-        return pointId;
-    }
+    public int getPointId() {return pointId;}
 
-    public void setPointId(int pointId) {
-        this.pointId = pointId;
-    }
+    public void setPointId(int pointId) {this.pointId = pointId;}
 
-    public String getColour() {
-        return colour;
-    }
+    public String getColour() {return colour;}
 
-    public void setColour(String colour) {
-        this.colour = colour;
-    }
+    public void setColour(String colour) {this.colour = colour;}
 
-    public boolean isConsolidatedChart() {
-        return consolidatedChart;
-    }
+    public boolean isConsolidatedChart() {return consolidatedChart;}
 
-    public void setConsolidatedChart(boolean consolidatedChart) {
-        this.consolidatedChart = consolidatedChart;
-    }
+    public void setConsolidatedChart(boolean consolidatedChart) {this.consolidatedChart = consolidatedChart;}
 
-    public boolean isScatterChart() {
-        return scatterChart;
-    }
+    public boolean isChartType() {return charttype;}
 
-    public void setScatterChart(boolean scatterChart) {
-        this.scatterChart = scatterChart;
-    }
+    public void setcharttype(boolean charttype) {this.charttype = charttype;}
 
-    public String getPlotTitle() {
-        return plotTitle;
-    }
+    public String getTitle() {return title;}
 
-    public void setPlotTitle(String plotTitle) {
-        this.plotTitle = plotTitle;
-    }
+    public void setTitle(String title) {this.title = title;}
 
-    public String getxaxisTitle() {
-        return xaxisTitle;
-    }
+    public String getXlabel() {return xlabel;}
 
-    public void setxaxisTitle(String xaxisTitle) {
-        this.xaxisTitle = xaxisTitle;
-    }
+    public void setXlabel(String xlabel) {this.xlabel = xlabel;}
 
-    public String getyaxisTitle() {
-        return yaxisTitle;
-    }
+    public String getYlabel() {return ylabel;}
 
-    public void setyaxisTitle(String yaxisTitle) {
-        this.yaxisTitle = yaxisTitle;
-    }
+    public void setYlabel(String ylabel) {this.ylabel = ylabel;}
 
-    public double getReferenceLine() {
-        return referenceLine;
-    }
+    public double getYref() {return yref;}
 
-    public void setReferenceLine(double referenceLine) {
-        this.referenceLine = referenceLine;
-    }
+    public void setYref(double yref) {this.yref = yref;}
 
     //
     //

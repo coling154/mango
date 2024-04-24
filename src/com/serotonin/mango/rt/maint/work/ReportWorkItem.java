@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-
 import javax.mail.internet.AddressException;
 
 import org.apache.commons.logging.Log;
@@ -110,14 +109,12 @@ public class ReportWorkItem implements WorkItem {
 
         // Create a list of DataPointVOs to which the user has permission.
         DataPointDao dataPointDao = new DataPointDao();
-        ReportDao reportDao = new ReportDao();
         List<ReportDao.PointInfo> points = new ArrayList<ReportDao.PointInfo>(reportConfig.getPoints().size());
         for (ReportPointVO reportPoint : reportConfig.getPoints()) {
             DataPointVO point = dataPointDao.getDataPoint(reportPoint.getPointId());
             if (point != null && Permissions.hasDataPointReadPermission(user, point)) {
                 String colour = null;
                 try {
-
                     if (!StringUtils.isEmpty(reportPoint.getColour()))
                         colour = ColorUtils.toHexString(reportPoint.getColour()).substring(1);
                 }
@@ -125,7 +122,9 @@ public class ReportWorkItem implements WorkItem {
                     // Should never happen since the colour would have been validated on save, so just let it go
                     // as null.
                 }
-                points.add(new ReportDao.PointInfo(point, colour, reportPoint.isConsolidatedChart(), reportPoint.isScatterChart(), reportPoint.getPlotTitle(), reportPoint.getxaxisTitle() , reportPoint.getyaxisTitle() , reportPoint.getReferenceLine()));
+                // Add new properties to points using ReportDao.PointInfo getters
+                points.add(new ReportDao.PointInfo(point, colour, reportPoint.isConsolidatedChart(), reportPoint.isChartType(), reportPoint.getTitle(),
+                        reportPoint.getXlabel(), reportPoint.getYlabel(), reportPoint.getYref()));
             }
         }
 

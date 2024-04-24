@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.Arrays;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -30,19 +29,21 @@ import org.joda.time.format.DateTimeFormatter;
 import com.serotonin.mango.view.export.CsvWriter;
 import com.serotonin.mango.view.text.TextRenderer;
 import com.serotonin.web.i18n.I18NUtils;
-
+import java.util.Arrays;
 /**
  * @author Matthew Lohbihler
  */
 public class ReportCsvStreamer implements ReportDataStreamHandler {
     private final PrintWriter out;
+    private String header;
 
     // Working fields
     private TextRenderer textRenderer;
     private final String[] data = new String[5];
     private final DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss");
     private final CsvWriter csvWriter = new CsvWriter();
-    public ReportCsvStreamer(PrintWriter out, ResourceBundle bundle, Boolean writeHeader) {
+
+    public ReportCsvStreamer(PrintWriter out, ResourceBundle bundle, boolean writeHeader) {
         this.out = out;
         if(writeHeader){
             // Write the headers.
@@ -53,13 +54,21 @@ public class ReportCsvStreamer implements ReportDataStreamHandler {
             data[4] = I18NUtils.getMessage(bundle, "common.annotation");
             out.write(csvWriter.encodeRow(data));
         }
+        else{
+            this.header += I18NUtils.getMessage(bundle, "reports.pointName") + "," +
+                    I18NUtils.getMessage(bundle, "common.time") + "," +
+                    I18NUtils.getMessage(bundle, "common.value") + "," +
+                    I18NUtils.getMessage(bundle, "reports.rendered") + "," +
+                    I18NUtils.getMessage(bundle, "common.annotation");
+
+        }
     }
 
     public void startPoint(ReportPointInfo pointInfo) {
         data[0] = pointInfo.getExtendedName();
         textRenderer = pointInfo.getTextRenderer();
     }
-    public void addHeader(ResourceBundle bundle, int points){
+    public void addHeader(ResourceBundle bundle, int points) {
         String[] headers = new String[points * 5];// adding header for each data point
         for(int i=0; i<points*5; i=i+5){
             headers[i] = I18NUtils.getMessage(bundle, "reports.pointName");
