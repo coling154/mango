@@ -541,15 +541,15 @@ public class ReportChartCreator {
             point.setDataTypeDescription(DataTypes.getDataTypeMessage(pointInfo.getDataType()).getLocalizedMessage(
                     bundle));
 
-                point.setScatterChart(pointInfo.isScatterChart());
-                point.setPlotTitle(pointInfo.getPlotTitle());
-                point.setxaxisTitle(pointInfo.getxaxisTitle());
-                point.setyaxisTitle(pointInfo.getyaxisTitle());
-                point.setReferenceLine(pointInfo.getReferenceLine());
                 point.setTextRenderer(pointInfo.getTextRenderer());
             if (pointInfo.getStartValue() != null)
                 point.setStartValue(pointInfo.getTextRenderer().getText(pointInfo.getStartValue(),
                         TextRenderer.HINT_FULL));
+            point.setScatterChart(pointInfo.isScatterChart());
+            point.setPlotTitle(pointInfo.getPlotTitle());
+            point.setxaxisTitle(pointInfo.getxaxisTitle());
+            point.setyaxisTitle(pointInfo.getyaxisTitle());
+            point.setReferenceLine(pointInfo.getReferenceLine());
             pointStatistics.add(point);
 
             Color colour = null;
