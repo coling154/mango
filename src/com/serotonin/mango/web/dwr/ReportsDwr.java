@@ -87,7 +87,7 @@ public class ReportsDwr extends BaseDwr {
                                       int fromMonth, int fromDay, int fromHour, int fromMinute, boolean toNone, int toYear, int toMonth,
                                       int toDay, int toHour, int toMinute, boolean schedule, int schedulePeriod, int runDelayMinutes,
                                       String scheduleCron, boolean email, boolean includeData, boolean zipData,
-                                      List<RecipientListEntryBean> recipients, boolean isScatterChart, String plotTitle, String xAxisTitle, String yAxisTitle, int referenceLine) {
+                                      List<RecipientListEntryBean> recipients) {
 
         DwrResponseI18n response = new DwrResponseI18n();
 
@@ -162,14 +162,6 @@ public class ReportsDwr extends BaseDwr {
         report.setZipData(zipData);
         report.setRecipients(recipients);
 
-        // New reports for new columns added
-        report.setScatterChart(isScatterChart);
-        report.setPlotTitle(plotTitle);
-        report.setXAxisTitle(xAxisTitle);
-        report.setYAxisTitle(yAxisTitle);
-        report.setReferenceLine(referenceLine);
-
-
         // Save the report
         reportDao.saveReport(report);
 
@@ -186,7 +178,7 @@ public class ReportsDwr extends BaseDwr {
                                      int previousPeriodType, int pastPeriodCount, int pastPeriodType, boolean fromNone, int fromYear,
                                      int fromMonth, int fromDay, int fromHour, int fromMinute, boolean toNone, int toYear, int toMonth,
                                      int toDay, int toHour, int toMinute, boolean email, boolean includeData, boolean zipData,
-                                     List<RecipientListEntryBean> recipients, boolean isScatterChart, String plotTitle, String xAxisTitle,String yAxisTitle, int referenceLine) {
+                                     List<RecipientListEntryBean> recipients) {
         DwrResponseI18n response = new DwrResponseI18n();
 
         // Basic validation
@@ -221,13 +213,6 @@ public class ReportsDwr extends BaseDwr {
             report.setIncludeData(includeData);
             report.setZipData(zipData);
             report.setRecipients(recipients);
-
-            // New reports added again
-            report.setScatterChart(isScatterChart);
-            report.setPlotTitle(plotTitle);
-            report.setXAxisTitle(xAxisTitle);
-            report.setYAxisTitle(yAxisTitle);
-            report.setReferenceLine(referenceLine);
 
             ReportWorkItem.queueReport(report);
         }

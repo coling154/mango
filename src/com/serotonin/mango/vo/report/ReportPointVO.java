@@ -16,7 +16,7 @@ public class ReportPointVO implements Serializable {
     private String plotTitle;
     private String xaxisTitle;
     private String yaxisTitle;
-    private int referenceLine;
+    private double referenceLine;
 
     public int getPointId() {
         return pointId;
@@ -62,7 +62,7 @@ public class ReportPointVO implements Serializable {
         return xaxisTitle;
     }
 
-    public void setXaxisTitle(String xaxisTitle) {
+    public void setxaxisTitle(String xaxisTitle) {
         this.xaxisTitle = xaxisTitle;
     }
 
@@ -70,15 +70,15 @@ public class ReportPointVO implements Serializable {
         return yaxisTitle;
     }
 
-    public void setYaxisTitle(String yaxisTitle) {
+    public void setyaxisTitle(String yaxisTitle) {
         this.yaxisTitle = yaxisTitle;
     }
 
-    public int getReferenceLine() {
+    public double getReferenceLine() {
         return referenceLine;
     }
 
-    public void setReferenceLine(int referenceLine) {
+    public void setReferenceLine(double referenceLine) {
         this.referenceLine = referenceLine;
     }
 
